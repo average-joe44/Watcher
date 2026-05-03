@@ -19,10 +19,6 @@ This is a python-based Remote Access Trojan(RAT)
 * The required modules for the server(attacker):
   > pyaudio
   >
-  > colorama (optional to use)
-  >
-  > pyfiglet (optional to use)
-  >
   > cv2
 
 * The required modules for the client(target):
