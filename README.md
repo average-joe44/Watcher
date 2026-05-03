@@ -13,6 +13,8 @@ This is a python-based Remote Access Trojan(RAT)
   > persistence (maintaining access)
   >
   > mic recording, and keystroke
+  >
+  > program execution
 
 * The required modules for the server(attacker):
   > pyaudio
