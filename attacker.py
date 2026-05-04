@@ -198,6 +198,10 @@ def upload_file(namafile):
           _target.sendall(struct.pack("Q", 0))
           print('file not found')
           return
+     if os.path.isdir(namafile):
+         _target.sendall(struct.pack("Q", 0))
+         print(f'{namafile} is a directory')
+         return
      filesize = os.path.getsize(namafile)
      _target.sendall(struct.pack("Q", filesize))
      with open(namafile, 'rb') as f:
