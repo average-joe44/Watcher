@@ -1,3 +1,6 @@
+# Python RAT project by average-joe44
+# Does NOT Responsible for any use case!
+
 import sys
 import time
 import socket
