@@ -16,12 +16,9 @@ This is a python-based Remote Access Trojan(RAT)
   >
   > program execution
 
-* The required modules for the server(attacker):
+* The required pip install:
   > pyaudio
   >
-  > cv2
-
-* The required modules for the client(target):
   > cv2
   >
   > pyautogui
@@ -33,57 +30,4 @@ This is a python-based Remote Access Trojan(RAT)
   > numpy
 
 ## NOTE
-This RAT is only a PoC project, this still has alot of Errors and won't work if you run the client on different computers unless you did a tunneling or a port forwarding.  
-If you wanna run the client-side in exe file, you can use pyinstaller for the CLI version, and auto-py-to-exe for the GUI version.  
-
-```bash
-pip install pyinstaller
-```
-
-for CLI version or  
-
-
-```bash
-pip install auto-py-to-exe
-```
-
-for GUI version
-
-## SETUP
-Server machine(listener)
-```
-python attacker.py
-```
-Target machine
-```
-python target.py
-```
-
-## WARNING ⚠
-* DETECTION ⚠
-> High network usage
-> 
-> High cpu usage
-> 
-> Unknown process pops up in task manager
-> 
-> High ram usage
-> 
-> Netstat cmd command
-> 
-> VirusTotal
-> 
-> Strange Behaviour
-> 
-> Heuristic detection
-> 
-> Registry
-> 
-> Strange text file
-> 
-> Hash
-> 
-> etc.
->
-
-I don't take any responsibility if anyone has this installed on someone computer.
+This RAT is only a PoC project, this still has alot of Errors, and i am not responsible for any misuse case.  
