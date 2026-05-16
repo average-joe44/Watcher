@@ -1,0 +1,6 @@
+pyaudio
+opencv-python
+pyautogui
+pynput
+mss
+numpy
