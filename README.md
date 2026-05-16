@@ -14,3 +14,24 @@ Made this like 1 year ago and decide to finally post this. Reminder that this is
 - Program execution & Program killing
 - Mic recording
 - Keystroke
+
+## Required!
+```
+python version 3.8 or higher
+Windows OS
+```
+  
+## Installation
+```
+pip install -r requirements.txt
+```
+
+## Usage
+```
+python attacker.py
+```
+Server binds to 9999
+```
+python target.py
+```
+Change the place holder "[server_ip]" into your attacker machine ip and you should have a shell replica that moment.  
