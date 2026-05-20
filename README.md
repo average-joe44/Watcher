@@ -18,7 +18,8 @@ Made this like 1 year ago and decide to finally post this. Reminder that this is
 ## Required!
 ```
 python version 3.8 or higher
-Windows OS
+Windows OS - for client
+Windows/Linux OS - for server
 ```
   
 ## Installation
