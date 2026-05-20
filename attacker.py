@@ -224,6 +224,9 @@ def download_file(namafile):
     if filesize == 0:
         print('file not found')
         return 
+    if filesize == 1:
+        print(f'{namafile} is a directory')
+        return
     recv = 0
     with open(namafile, 'wb') as file:
         print('downloading')
