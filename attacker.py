@@ -355,7 +355,7 @@ def shellc():
                     -kill       >> kill program
                     ================================
                       
-                        privileges:
+                        get id:
                     ================================
                     -getuid     >> get user id
                     
