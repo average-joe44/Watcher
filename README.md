@@ -24,9 +24,8 @@ Windows/Linux OS - for server
 ```
   
 ## Installation
-```
-Windows + R
-```
+Type Windows + R to open windows RUN.  
+Copy the text below:
 ```
 cmd
 ```
