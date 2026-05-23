@@ -25,6 +25,18 @@ Windows/Linux OS - for server
   
 ## Installation
 ```
+Windows + R
+```
+```
+cmd
+```
+```
+cd Desktop && git clone https://github.com/average-joe44/Watcher
+```
+```
+cd Watcher
+```
+```
 pip install -r requirements.txt
 ```
 
