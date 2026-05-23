@@ -24,11 +24,8 @@ Windows/Linux OS - for server
 ```
   
 ## Installation
-Type Windows + R to open windows RUN.  
+Type Windows + R to open windows run, then type "**cmd**" and press enter.
 Copy the text below:
-```
-cmd
-```
 ```
 cd Desktop && git clone https://github.com/average-joe44/Watcher
 ```
