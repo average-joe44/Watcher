@@ -255,6 +255,8 @@ def data_diterima():
                 return json.loads(data)
             except ValueError:
                  continue
+            except socket.timeout:
+                 continue
 
 def shellc():
     x = 0                      
