@@ -9,7 +9,6 @@ import pickle
 import cv2
 import wave
 import pyaudio
-import sys
 import threading
 import time
 from fileattacker import download_file, upload_file
