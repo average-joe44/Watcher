@@ -1,5 +1,6 @@
 import struct
 import os
+from termcolor import cprint
 
 def recv_all(sock, n):
     data = bytearray()
@@ -14,24 +15,24 @@ def upload_file(sock, namafile):
     bufsize = 65536
     if not os.path.exists(namafile):
         sock.sendall(struct.pack("Q", 0))
-        print('file not found')
+        cprint('[-] file not found', 'red')
         return
     if os.path.isdir(namafile):
         sock.sendall(struct.pack("Q", 0))
-        print(f'{namafile} is a directory')
+        cprint(f'[!] {namafile} is a directory', 'yellow')
         return
     
     filesize = os.path.getsize(namafile)
     sock.sendall(struct.pack("Q", filesize))
     with open(namafile, 'rb') as f:
-        print('uploading')
+        cprint('[+] uploading', 'blue')
         while True:
             data = f.read(bufsize)
             if not data:
                 break
             sock.sendall(data)
-            print(f'{f.tell()}/{filesize} bytes ({f.tell()/filesize*100:.2f}%)', end='\r')
-        print('\nuploaded')  
+            print(f'[*] uploading... {f.tell()}/{filesize} bytes ({f.tell()/filesize*100:.2f}%)', end='\r')
+        cprint('\n[+] uploaded', 'green')  
 
 def download_file(sock, namafile):
     bufsize = 65536
@@ -42,14 +43,14 @@ def download_file(sock, namafile):
     filesize = struct.unpack("Q", size_data)[0]
 
     if filesize == 0:
-        print('file not found')
+        cprint('[-] file not found', 'red')
         return 
     if filesize == 1:
-        print(f'{namafile} is a directory')
+        cprint(f'[!] {namafile} is a directory', 'yellow')
         return
     recv = 0
     with open(namafile, 'wb') as file:
-        print('downloading')
+        cprint('[+] downloading', 'blue')
         while recv < filesize:
                 to_read = min(bufsize, filesize - recv)
                 data = sock.recv(to_read)
@@ -57,5 +58,5 @@ def download_file(sock, namafile):
                     break
                 file.write(data)
                 recv += len(data)
-                print(f'{recv}/{filesize} bytes ({recv/filesize*100:.2f}%)', end='\r')
-        print('\ndownloaded')
+                print(f'[*] downloading... {recv}/{filesize} bytes ({recv/filesize*100:.2f}%)', end='\r')
+        cprint('\n[+] downloaded', 'green')
