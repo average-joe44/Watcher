@@ -12,7 +12,7 @@ Made this like 1 year ago and decide to finally post this. Reminder that this is
 - Keylogging
 - Download & Upload File
 - Program execution & Program killing
-- Mic recording
+- Mic recording & Mic streaming 
 - Keystroke
 - Automatic socket reconnect
 
