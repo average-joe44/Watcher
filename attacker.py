@@ -421,74 +421,78 @@ def shellc(_target):
                 sys.exit()
             elif perintah == 'help':
                 cprint("""
-                        basic command:
-                    ================================
-                    -exit/quit >> exit the process
+basic command:
+================================
+ -exit/quit >> exit the process
 
-                    -background/bg >> background the process
-                    
-                    -clear     >> clear terminal
-                    ================================
+ -background/bg >> background the process
 
-                        file transfer command:
-                    ================================
-                    -download <filename>  >> download file
+ -clear     >> clear terminal
+================================
 
-                    -upload   <filename>  >> upload file
-                    ================================
+file transfer command:
+================================
+ -download <filename>  >> download file
 
-                        keylogging:
-                    ================================
-                    -start_log >> start keylogger
+ -upload   <filename>  >> upload file
+================================
 
-                    -baca_log  >> read keylogger
+keylogging:
+================================
+ -start_log >> start keylogger
 
-                    -stop_log  >> stop keylogger
-                    ================================
+ -baca_log  >> read keylogger
 
-                        camera command:
-                    ================================                   
-                    -start_cam >> access camera
+ -stop_log  >> stop keylogger
+================================
 
-                    -snap_cam  >> snap camera
-                    ================================
+camera command:
+================================                   
+ -start_cam >> access camera
 
-                        screen command:
-                    ================================
-                    -screen_shot >> screen shot
+ -snap_cam  >> snap camera
+================================
 
-                    -screen_share >> screen sharing
-                    ================================
+screen command:
+================================
+ -screen_shot >> screen shot
 
-                        maintain access:
-                    ================================ 
-                    -persistence >> run persistence
-                    example:    persistence winsec manager.exe
-                    =================================
+ -screen_share >> screen sharing
+================================
 
-                        mic, keys, and cursor command:
-                    ================================
-                    -audio:
-                      -rec_audio >> record audio for 20 sec and save it in disk
-                      -live_audio >> stream audio without saving it
-                    
-                    -ui:
-                      -disable/enable cursor/keyboard
-                      -send_key >> inject keystroke
-                      -move x, y >> move cursor
-                      -lclick/rclick >> cursor click event
-                    ================================ 
+maintain access:
+================================ 
+ -persistence >> run persistence
+ example:    persistence winsec manager.exe
+=================================
 
-                        execution:
-                    ================================
-                    -execute    >> start program
+mic, keys & cursor command:
+================================
+ -audio:
+     -rec_audio >> record audio for 20 sec and save it in disk
+    
+     -live_audio >> stream audio without saving it
 
-                    -kill       >> kill program by image name
-                      
-                    -pidkill    >> kill program by pid name
+ -ui:
+     -ui lock/unlock cursor/keyboard >> manipulates cursor & keyboard
 
-                    -getpid     >> get pid name
-                    ================================
+     -send_key >> inject keystroke
+
+     -move x, y >> move cursor
+
+     -lclick/rclick >> cursor click event
+================================ 
+
+execution:
+================================
+ -execute    >> start program
+
+ -kill       >> kill program by image name
+    
+ -pidkill    >> kill program by pid name
+
+ -getpid     >> get pid name
+================================
                     """, 'yellow')
             elif perintah == 'rec_audio':
                 p += 1
