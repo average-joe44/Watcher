@@ -476,15 +476,15 @@ mic, keys & cursor command:
      -live_audio >> stream audio without saving it
 
  -ui:
-     -ui lock/unlock cursor/keyboard >> manipulates cursor & keyboard
+     -ui <lock/unlock> <cursor/keyboard> >> enable/disable cursor & keyboard
 
      -send_key >> inject keystroke
 
-     -move x, y >> move cursor
+     -move <x, y> >> move cursor
 
      -lclick/rclick >> cursor click event
 
-     -set_wallpaper >> set wallpaper image
+     -set_wallpaper <filename> >> set wallpaper image
 ================================ 
 
 execution:
