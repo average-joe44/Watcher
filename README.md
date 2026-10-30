@@ -13,7 +13,7 @@ Made this like 1 year ago and decide to finally post this. Reminder that this is
 - Download & Upload File
 - Program execution & Program killing
 - Mic recording & Mic streaming 
-- Cursor & Keyboard Manipulation
+- UI Manipulation (Cursor, Keyboard & Wallpaper)
 - Automatic socket reconnect
 
 ## Required!
