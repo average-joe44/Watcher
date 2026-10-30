@@ -483,6 +483,8 @@ mic, keys & cursor command:
      -move x, y >> move cursor
 
      -lclick/rclick >> cursor click event
+
+     -set_wallpaper >> set wallpaper image
 ================================ 
 
 execution:
@@ -522,6 +524,8 @@ execution:
                 recv_status(_target)
             elif perintah.startswith("ui"):
                 ui(_target, perintah)
+            elif perintah.startswith("set_wallpaper"):
+                recv_status(_target)
             else:
                 hasil = data_diterima(_target)
                 print(hasil)
